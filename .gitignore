@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+.venv-*/
+data/
+artifacts/
+*.sqlite3*
+venv/
+env/
+pip-log.txt
+
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Uploads
+uploads/
+reports/
+
+# Certs
+certs/
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Alembic (keep versions)
+backend/alembic/versions/*.pyc
+
+#md
+plan_developpement.md
+roadmap.md
+
+test_2024.csv
