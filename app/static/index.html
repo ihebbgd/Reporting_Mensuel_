@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#156c52">
+  <title>Reporting Mensuel</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/vendor/lucide.min.js" defer></script>
+  <script src="/assets/vendor/chart.umd.js" defer></script>
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Aller au contenu</a>
+  <aside class="sidebar">
+    <a href="/" class="brand"><i data-lucide="chart-no-axes-combined"></i><span>Reporting<br><strong>Mensuel</strong></span></a>
+    <div class="workspace-label">ESPACE FINANCIER</div>
+    <nav aria-label="Navigation principale">
+      <button class="nav active" data-view="dashboard"><i data-lucide="layout-dashboard"></i>Vue d'ensemble</button>
+      <button class="nav" data-view="history"><i data-lucide="files"></i>Rapports<span id="report-count" class="count">0</span></button>
+      <button class="nav" data-view="compare"><i data-lucide="git-compare-arrows"></i>Comparaison</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="workspace-label">ATELIER COMPTABLE</span><div class="team"><span class="avatar">EC</span><div>Équipe comptable<small>Espace partagé</small></div></div><button id="logout" class="text-button"><i data-lucide="log-out"></i>Déconnexion</button></div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar"><span><span class="dot"></span>Reporting financier</span><div class="top-actions"><span class="currency">TND</span><button class="icon-button" id="refresh" title="Actualiser" aria-label="Actualiser"><i data-lucide="refresh-cw"></i></button></div></header>
+    <main id="main">
+      <div class="page-heading"><div><p class="eyebrow">SUIVI DES EXERCICES</p><h1 id="page-title">Vue d'ensemble</h1></div><button class="primary" id="open-import"><i data-lucide="plus"></i>Nouveau rapport</button></div>
+      <p id="notice" role="status" aria-live="polite" hidden></p>
+
+      <section id="dashboard-view">
+        <div class="section-toolbar"><label class="inline-label" for="selected-report">Exercice<select id="selected-report"><option value="">Aucun rapport</option></select></label><button id="download" class="secondary" disabled><i data-lucide="download"></i>Exporter le PDF</button></div>
+        <div id="pending" class="pending" hidden><div><strong id="pending-label">Rapport en attente</strong><span id="pending-percent">0 %</span></div><progress id="progress" value="0" max="100">0 %</progress></div>
+        <div id="empty" class="empty"><i data-lucide="chart-column"></i><h2>Aucun rapport disponible</h2><button class="secondary" id="empty-import"><i data-lucide="upload"></i>Importer un CSV</button></div>
+        <div id="report-content" hidden>
+          <div class="report-meta"><span id="report-filename"></span><span id="report-mode"></span></div>
+          <div class="kpis">
+            <article class="kpi"><span>Chiffre d'affaires<i data-lucide="trending-up"></i></span><strong id="ca">0</strong><small>TND · exercice complet</small></article>
+            <article class="kpi"><span>Total des charges<i data-lucide="receipt"></i></span><strong id="charges">0</strong><small>TND · exercice complet</small></article>
+            <article class="kpi"><span>Solde produits − charges<i data-lucide="scale"></i></span><strong id="resultat">0</strong><small>TND · périmètre importé</small></article>
+            <article class="kpi"><span>Marge brute<i data-lucide="percent"></i></span><strong id="marge">0</strong><small>(CA − achats) / CA</small></article>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Détail du rapport">
+            <button id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview">Synthèse</button>
+            <button id="tab-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" data-tab="monthly" tabindex="-1">Détail mensuel</button>
+            <button id="tab-alerts" role="tab" aria-selected="false" aria-controls="panel-alerts" data-tab="alerts" tabindex="-1">Points à vérifier <span id="alert-count">0</span></button>
+            <button id="tab-analysis" role="tab" aria-selected="false" aria-controls="panel-analysis" data-tab="analysis" tabindex="-1">Analyse</button>
+          </div>
+          <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+            <div class="chart-heading"><div><h2>Activité mensuelle</h2><p>Chiffre d'affaires et charges · TND</p></div><span id="year-label" class="badge"></span></div>
+            <div class="chart-wrap"><canvas id="activity-chart" role="img" aria-label="Chiffre d'affaires et charges par mois ; valeurs accessibles dans Détail mensuel"></canvas></div>
+            <div class="insights"><div><i data-lucide="arrow-up-right"></i><span>Meilleur mois<strong id="best-month"></strong></span></div><div><i data-lucide="arrow-down-right"></i><span>Mois le plus faible<strong id="worst-month"></strong></span></div><div><i data-lucide="users"></i><span>Part des charges de personnel<strong id="personnel"></strong></span></div></div>
+          </section>
+          <section id="panel-monthly" role="tabpanel" aria-labelledby="tab-monthly" hidden><div class="table-wrap"><table><caption>Détail mensuel en TND</caption><thead><tr><th>Mois</th><th>CA</th><th>Charges</th><th>Solde</th><th>Marge %</th></tr></thead><tbody id="monthly-rows"></tbody></table></div></section>
+          <section id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts" hidden><div class="section-heading"><h2>Points à vérifier</h2><p>Variations détectées, à confirmer avec les pièces comptables.</p></div><ul id="warnings" class="warnings"></ul><div class="table-wrap"><table><caption>Variations significatives par compte</caption><thead><tr><th>Compte</th><th>Libellé</th><th>Période</th><th>Variation</th></tr></thead><tbody id="anomaly-rows"></tbody></table></div></section>
+          <section id="panel-analysis" role="tabpanel" aria-labelledby="tab-analysis" hidden><div class="analysis-note" id="analysis-note"></div><div class="prose"><h2>Synthèse de l'exercice</h2><p id="analysis-summary"></p><h2>Tendances</h2><p id="analysis-trends"></p><h2>Recommandations</h2><p id="analysis-actions"></p></div><p class="muted">Document automatique non certifié, à valider par un comptable.</p></section>
+        </div>
+      </section>
+
+      <section id="history-view" hidden>
+        <div class="section-toolbar"><h2>Historique des rapports</h2><span id="history-total" class="muted"></span></div>
+        <div class="table-wrap"><table><caption class="sr-only">Historique des rapports</caption><thead><tr><th>Fichier</th><th>Exercice</th><th>Création</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+        <div class="pagination"><span id="page-info"></span><div><button id="prev-page" class="icon-button" title="Page précédente" aria-label="Page précédente"><i data-lucide="chevron-left"></i></button><button id="next-page" class="icon-button" title="Page suivante" aria-label="Page suivante"><i data-lucide="chevron-right"></i></button></div></div>
+      </section>
+
+      <section id="compare-view" hidden>
+        <form id="compare-form" class="comparison-controls"><label>Exercice de référence<select id="previous-report" required><option value="">Choisir</option></select></label><i data-lucide="arrow-right"></i><label>Exercice suivant<select id="current-report" required><option value="">Choisir</option></select></label><button class="primary" type="submit">Comparer</button></form>
+        <p id="compare-error" class="error" role="alert" hidden></p><div id="comparison-empty" class="empty"><i data-lucide="git-compare-arrows"></i><h2>Comparaison des exercices</h2></div>
+        <div id="comparison-result" hidden><h2 id="comparison-title"></h2><div class="table-wrap"><table><caption>Écarts annuels</caption><thead><tr><th>Indicateur</th><th>Référence</th><th>Suivant</th><th>Écart</th><th>Variation</th></tr></thead><tbody id="comparison-rows"></tbody></table></div></div>
+      </section>
+      <footer>Reporting Mensuel <span>Analyse comptable · TND</span></footer>
+    </main>
+  </div>
+
+  <dialog id="login-dialog" aria-labelledby="login-title">
+    <form id="login-form"><div class="dialog-symbol"><i data-lucide="chart-no-axes-combined"></i></div><p class="eyebrow">ESPACE COMPTABLE</p><h2 id="login-title">Reporting Mensuel</h2><label>Clé d'accès<input id="access-key" type="password" required autocomplete="current-password" autofocus></label><p id="login-error" class="error" role="alert" hidden></p><button class="primary full" type="submit">Ouvrir l'espace<i data-lucide="arrow-right"></i></button></form>
+  </dialog>
+
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <div class="dialog-header"><h2 id="import-title">Nouveau rapport</h2><button id="close-import" class="icon-button" title="Fermer" aria-label="Fermer"><i data-lucide="x"></i></button></div>
+    <form id="import-form">
+      <label class="file-field">Fichier comptable<input id="csv-file" type="file" accept=".csv,text/csv" required></label>
+      <div class="form-grid"><label>Exercice<input id="import-year" type="number" min="1900" max="2100" value="2025" required></label><label>Référence N−1<select id="baseline-report"><option value="">Sans comparaison</option></select></label></div>
+      <label class="check"><input type="checkbox" id="use-ai"><span>Analyse Gemini<small>J'autorise l'envoi des indicateurs financiers à Gemini.</small></span></label>
+      <p id="ai-availability" class="muted"></p><p id="import-error" class="error" role="alert" hidden></p>
+      <div class="examples"><span>CSV fictifs</span><button type="button" class="text-button" data-example="2024"><i data-lucide="file-down"></i>2024</button><button type="button" class="text-button" data-example="2025"><i data-lucide="file-down"></i>2025</button></div>
+      <button id="submit-import" class="primary full" type="submit"><i data-lucide="upload"></i>Générer le rapport</button>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Supprimer ce rapport ?</h2><p id="delete-filename"></p><p>Le PDF et son historique seront supprimés définitivement.</p><div class="dialog-actions"><button id="cancel-delete" class="secondary">Annuler</button><button id="confirm-delete" class="danger">Supprimer</button></div></dialog>
+</body>
+</html>
