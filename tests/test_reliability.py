@@ -54,11 +54,13 @@ def test_localized_amounts(value, expected):
     assert clean_amount(value) == expected
 
 
-def test_bad_total_is_not_silently_corrected(tmp_path, demo_csv):
+def test_bad_total_is_corrected_with_warning(tmp_path, demo_csv):
     path = tmp_path / "bad.csv"
     path.write_bytes(demo_csv.replace(b";1200000", b";999"))
-    with pytest.raises(DataProcessingError, match="Ligne 2.*Total"):
-        process_csv(str(path), year=2024)
+    data = process_csv(str(path), year=2024)
+    assert any("corrigé automatiquement" in w for w in data.warnings)
+    corrected_entry = data.entrees[0]
+    assert corrected_entry.total == sum(corrected_entry.montants.values())
 
 
 def test_explicit_year_ignores_uuid(tmp_path, demo_csv):
